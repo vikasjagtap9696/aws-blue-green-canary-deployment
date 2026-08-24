@@ -15,7 +15,7 @@ Blue represents the current production version. Green represents the candidate v
 
 ## Architecture
 
-![AWS Blue-Green Canary Deployment Architecture](architecture/architecture-diagram.svg)
+![AWS Blue-Green Canary Deployment Architecture](architecture/architecture-diagram.jpg)
 
 Traffic flows through Route 53 and HTTPS on the Application Load Balancer. The ALB routes requests to healthy targets in the Blue or Green target group.
 
