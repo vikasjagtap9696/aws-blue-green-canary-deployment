@@ -1,0 +1,545 @@
+# EC2 Instance Setup
+
+## Overview
+
+Amazon EC2 (Elastic Compute Cloud) provides virtual servers in AWS.
+
+In this project, we create four EC2 instances.
+
+Blue Environment:
+
+    Server 1 → Villa Agency Website
+    Server 2 → Villa Agency Website
+
+Green Environment:
+
+    Server 3 → Klassy Cafe Website
+    Server 4 → Klassy Cafe Website
+
+The four EC2 instances are registered with two different Target Groups.
+
+---
+
+## EC2 Architecture
+
+    Application Load Balancer
+              |
+       +------+------+
+       |             |
+       v             v
+   Blue Target    Green Target
+      Group          Group
+       |               |
+   +---+---+       +---+---+
+   |       |       |       |
+   v       v       v       v
+Server 1 Server 2 Server 3 Server 4
+  Blue     Blue    Green    Green
+    |         |       |        |
+    +----+----+       +----+---+
+         |                 |
+    Villa Website      Cafe Website
+
+---
+
+# Step 1 - Open EC2
+
+Login to the AWS Management Console.
+
+Go to:
+
+    AWS Console
+        ↓
+    EC2
+        ↓
+    Instances
+
+Click:
+
+    Launch instances
+
+---
+
+# Step 2 - Select AMI
+
+For this project, use an Amazon Linux AMI.
+
+Example:
+
+    Amazon Linux 2023
+
+The exact AMI version may change over time.
+
+Select the Amazon Linux AMI available in your AWS Region.
+
+---
+
+# Step 3 - Select Instance Type
+
+Select an instance type suitable for your AWS account and project requirements.
+
+Example:
+
+    t2.micro
+
+or another eligible instance type available in your AWS account.
+
+Always check the current AWS pricing and Free Tier eligibility before launching resources.
+
+---
+
+# Step 4 - Configure Network
+
+This project uses the AWS Default VPC.
+
+For better availability, use subnets from two different Availability Zones.
+
+Example:
+
+    Server 1 → Availability Zone 1a
+    Server 2 → Availability Zone 1a
+
+    Server 3 → Availability Zone 1b
+    Server 4 → Availability Zone 1b
+
+The exact Availability Zone names depend on the AWS Region.
+
+---
+
+# Step 5 - Enable Public IPv4
+
+For this learning project, enable:
+
+    Auto-assign Public IP: Enable
+
+This allows the EC2 instances to receive public IPv4 addresses.
+
+Public IP addresses are useful for initial testing and administration.
+
+In a production environment, application servers are normally kept private behind the Application Load Balancer.
+
+---
+
+# Step 6 - Configure Security Group
+
+Use the EC2 Security Group created in the previous step.
+
+Example:
+
+    EC2-SG
+
+The Security Group should allow:
+
+    HTTP : 80
+    Source: ALB-SG
+
+For administration, SSH can be allowed:
+
+    SSH : 22
+    Source: My IP
+
+SSH should not normally be exposed to the entire internet.
+
+---
+
+# Step 7 - Configure Storage
+
+For this project, the default EBS root volume is sufficient.
+
+Example:
+
+    Root Volume:
+    8 GiB or as required
+
+The website files are small, so a large storage volume is not required.
+
+---
+
+# Step 8 - Launch Server 1
+
+Launch the first EC2 instance.
+
+Name:
+
+    Blue-Server-1
+
+Select:
+
+    Amazon Linux
+
+Select the required instance type.
+
+Network:
+
+    Default VPC
+
+Select a subnet in Availability Zone 1a.
+
+Security Group:
+
+    EC2-SG
+
+Use the following User Data:
+
+    user-data/blue-server.sh
+
+This User Data installs Apache and the Villa Agency website automatically.
+
+---
+
+# Step 9 - Launch Server 2
+
+Launch the second EC2 instance.
+
+Name:
+
+    Blue-Server-2
+
+Use:
+
+    Amazon Linux
+
+Network:
+
+    Default VPC
+
+Select a subnet in Availability Zone 1a.
+
+Security Group:
+
+    EC2-SG
+
+Use:
+
+    user-data/blue-server.sh
+
+Server 2 will run the same Villa Agency website.
+
+---
+
+# Step 10 - Launch Server 3
+
+Launch the third EC2 instance.
+
+Name:
+
+    Green-Server-3
+
+Use:
+
+    Amazon Linux
+
+Network:
+
+    Default VPC
+
+Select a subnet in Availability Zone 1b.
+
+Security Group:
+
+    EC2-SG
+
+Use:
+
+    user-data/green-server.sh
+
+Server 3 will run the Klassy Cafe website.
+
+---
+
+# Step 11 - Launch Server 4
+
+Launch the fourth EC2 instance.
+
+Name:
+
+    Green-Server-4
+
+Use:
+
+    Amazon Linux
+
+Network:
+
+    Default VPC
+
+Select a subnet in Availability Zone 1b.
+
+Security Group:
+
+    EC2-SG
+
+Use:
+
+    user-data/green-server.sh
+
+Server 4 will run the same Klassy Cafe website.
+
+---
+
+# EC2 Server Summary
+
+    Server 1
+    Environment: Blue
+    Website: Villa Agency
+    User Data: blue-server.sh
+
+    Server 2
+    Environment: Blue
+    Website: Villa Agency
+    User Data: blue-server.sh
+
+    Server 3
+    Environment: Green
+    Website: Klassy Cafe
+    User Data: green-server.sh
+
+    Server 4
+    Environment: Green
+    Website: Klassy Cafe
+    User Data: green-server.sh
+
+---
+
+# Step 12 - Verify EC2 Instances
+
+Go to:
+
+    EC2
+        ↓
+    Instances
+
+Verify that all four instances are:
+
+    Instance state: Running
+
+and:
+
+    Status checks: 2/2 checks passed
+
+Expected:
+
+    Blue-Server-1   Running
+    Blue-Server-2   Running
+    Green-Server-3  Running
+    Green-Server-4  Running
+
+---
+
+# Step 13 - Verify Apache
+
+The User Data script installs Apache automatically.
+
+Connect to an EC2 instance using SSH if required.
+
+Check Apache:
+
+    sudo systemctl status httpd
+
+Expected:
+
+    Active: active (running)
+
+If Apache is not running:
+
+    sudo systemctl start httpd
+
+Enable Apache at system startup:
+
+    sudo systemctl enable httpd
+
+---
+
+# Step 14 - Test Website Locally
+
+Run:
+
+    curl http://localhost
+
+If Apache and the website are configured correctly, the command should return HTML content from the website.
+
+Check the Apache web directory:
+
+    ls -la /var/www/html
+
+The website files should be present.
+
+---
+
+# Step 15 - Check Port 80
+
+Run:
+
+    sudo ss -tlnp | grep :80
+
+Apache should be listening on port 80.
+
+Expected concept:
+
+    Apache
+       |
+       v
+    Port 80
+       |
+       v
+    HTTP Request
+
+---
+
+# Step 16 - Understand User Data
+
+EC2 User Data automatically configures the server during the initial launch.
+
+The process is:
+
+    EC2 Launch
+        ↓
+    User Data Runs
+        ↓
+    Install Apache
+        ↓
+    Install wget and unzip
+        ↓
+    Download Website
+        ↓
+    Extract Website
+        ↓
+    Copy Website to /var/www/html
+        ↓
+    Enable Apache
+        ↓
+    Start Apache
+        ↓
+    Website Ready
+
+---
+
+# Why Use User Data?
+
+Without User Data, every EC2 server would require manual configuration.
+
+For example:
+
+    Server 1
+        ↓
+    Login
+        ↓
+    Install Apache
+        ↓
+    Download Website
+        ↓
+    Configure Apache
+
+The same process would need to be repeated for all four servers.
+
+With User Data:
+
+    Launch EC2
+        ↓
+    User Data automatically runs
+        ↓
+    Server is configured
+        ↓
+    Website is ready
+
+This improves consistency and reduces manual work.
+
+---
+
+# Direct EC2 Testing
+
+Before connecting the servers to the Application Load Balancer, the websites can be tested individually.
+
+For Blue servers:
+
+    http://SERVER-1-PUBLIC-IP
+    http://SERVER-2-PUBLIC-IP
+
+Expected:
+
+    Villa Agency Website
+
+For Green servers:
+
+    http://SERVER-3-PUBLIC-IP
+    http://SERVER-4-PUBLIC-IP
+
+Expected:
+
+    Klassy Cafe Website
+
+If the websites do not open, check:
+
+    1. EC2 instance state
+    2. Apache service
+    3. Port 80
+    4. Security Group
+    5. Public IPv4 address
+    6. Route table
+    7. Internet Gateway
+
+---
+
+# Important Production Note
+
+This project uses EC2 instances directly to demonstrate AWS infrastructure and deployment concepts.
+
+In a production environment, application servers can be managed using:
+
+    Auto Scaling Groups
+    Launch Templates
+    AWS Systems Manager
+    Infrastructure as Code
+    CI/CD pipelines
+    Containers
+    Amazon ECS
+    Kubernetes
+
+---
+
+# Final EC2 Architecture
+
+    Default VPC
+         |
+    +----+----------------+
+    |                     |
+    v                     v
+ Availability Zone 1a   Availability Zone 1b
+    |                     |
+    +-- Server 1          +-- Server 3
+    |   Blue              |   Green
+    |
+    +-- Server 2          +-- Server 4
+        Blue                  Green
+
+    Blue:
+    Server 1 + Server 2
+    Villa Agency Website
+
+    Green:
+    Server 3 + Server 4
+    Klassy Cafe Website
+
+---
+
+# Expected Result
+
+At the end of this step:
+
+    Server 1 → Running → Villa Website
+    Server 2 → Running → Villa Website
+
+    Server 3 → Running → Cafe Website
+    Server 4 → Running → Cafe Website
+
+All four EC2 instances are ready to be registered with their respective Target Groups.
+
+---
+
+# Next Step
+
+Create the Blue and Green Target Groups.
+
+Next file:
+
+    setup/05-target-groups.md
